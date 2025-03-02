@@ -10,6 +10,7 @@ import {
     DB_USERNAME,
     NODE_ENV,
 } from '@/config';
+import roleModel from './models/role.model';
 
 const sequelize = new Sequelize.Sequelize(
     DB_NAME as string,
@@ -41,6 +42,7 @@ const sequelize = new Sequelize.Sequelize(
 sequelize.authenticate();
 
 export const DB = {
+    Role: roleModel(sequelize),
     Users: userModel(sequelize),
     sequelize, // connection instance (RAW queries)
     Sequelize, // library

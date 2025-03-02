@@ -1,0 +1,10 @@
+components:
+    schemas:
+        role:
+            type: object
+            required:
+                - name
+            properties:
+                role_name:
+                    type: string
+                    example: samapos-admin
