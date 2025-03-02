@@ -9,16 +9,16 @@ const userService = {
             accessToken,
             JWT_ACCESS_TOKEN_SECRET as string,
         );
-    
+
         const userId = decodeToken.userId;
-    
+
         const user = await userRepo.getUserProfile(userId);
         if (!user) {
             throw new CustomError('User not found', 404);
         }
-    
+
         return user;
-    }    
-}
+    },
+};
 
 export default userService;

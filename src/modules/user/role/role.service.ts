@@ -18,7 +18,7 @@ const roleService = {
     delete: async (id: number) => {
         const data = await roleRepo.findRoleById(id);
         if (!data) throw new CustomError('Role not found', 404);
-        
+
         await roleRepo.delete(data.id);
 
         return {

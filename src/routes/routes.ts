@@ -5,7 +5,7 @@ import express from 'express';
 
 const router = express.Router();
 
-router.use('/role', roleRouter)
+router.use('/role', roleRouter);
 router.use('/auth', authRouter);
 router.use('/user', userRouter);
 

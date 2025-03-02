@@ -16,7 +16,7 @@ const roleRepo = {
 
     delete: async (id: number) => {
         return await DB.Role.destroy({ where: { id } });
-    }
+    },
 };
 
 export default roleRepo;
