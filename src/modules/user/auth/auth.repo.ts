@@ -1,7 +1,7 @@
 import { DB } from '@/database';
-import { User } from '@/interfaces/user.interfaces';
+import { User } from '@/interfaces/user.interface';
 
-const repo = {
+const authRepo = {
     findUserByEmail: async (email: string): Promise<User | null> => {
         return await DB.Users.findOne({ where: { email } });
     },
@@ -11,4 +11,4 @@ const repo = {
     },
 };
 
-export default repo;
+export default authRepo;
