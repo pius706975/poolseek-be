@@ -14,15 +14,18 @@ export const validateSignUp = (userData: any) => {
             .guid({ version: 'uuidv4' })
             .optional()
             .messages({ 'string.guid': 'User ID must be in UUID format' }),
+        first_name: Joi.string().min(1).required().messages({
+            'string.min': 'First name should at least minimum 1 character',
+            'any.required': 'First name is required',
+        }),
+        last_name: Joi.string().min(1).required().messages({
+            'string.min': 'Last name should at least minimum 1 character',
+            'any.required': 'Last name is required',
+        }),
         email: Joi.string().email().required().messages({
             'string.email': 'Email format is invalid',
             'any.required': 'Email is required',
         }),
-        name: Joi.string().min(1).required().messages({
-            'string.min': 'Name should at least minimum 1 character',
-            'any.required': 'Name is required',
-        }),
-        username: Joi.string().optional(),
         password: Joi.string()
             .min(8)
             .pattern(

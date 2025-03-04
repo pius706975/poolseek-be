@@ -1,7 +1,7 @@
 import { User } from '@/interfaces/user.interface';
 import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
 
-export type UserCreationAttributes = Optional<User, 'id' | 'username'>;
+export type UserCreationAttributes = Optional<User, 'id' | 'email'>;
 
 export class UserModel
     extends Model<User, UserCreationAttributes>
@@ -9,9 +9,15 @@ export class UserModel
 {
     public id!: string;
     public email!: string;
-    public name!: string;
-    public username!: string;
+    public first_name!: string;
+    public last_name!: string;
+    public image!: string;
+    public role_id!: number;
+    public phone_number!: string;
     public password!: string;
+    public otp_code!: string;
+    public otp_expiration!: Date;
+    public is_verified!: boolean;
     public created_at: string | undefined;
     public updated_at: string | undefined;
 
@@ -32,18 +38,48 @@ export default function (sequelize: Sequelize): typeof UserModel {
                 type: DataTypes.STRING,
                 unique: true,
             },
-            name: {
+            first_name: {
                 allowNull: false,
                 type: DataTypes.STRING,
             },
-            username: {
+            last_name: {
+                allowNull: false,
+                type: DataTypes.STRING,
+            },
+            image: {
                 allowNull: true,
                 type: DataTypes.STRING,
-                unique: true,
+            },
+            role_id: {
+                allowNull: false,
+                type: DataTypes.INTEGER,
+                references: {
+                    model: 'roles',
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
+            },
+            phone_number: {
+                allowNull: true,
+                type: DataTypes.STRING,
             },
             password: {
                 allowNull: false,
                 type: DataTypes.STRING(255),
+            },
+            otp_code: {
+                allowNull: true,
+                type: DataTypes.STRING,
+            },
+            otp_expiration: {
+                allowNull: true,
+                type: DataTypes.DATE,
+            },
+            is_verified: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false,
             },
             created_at: DataTypes.DATE,
             updated_at: DataTypes.DATE,

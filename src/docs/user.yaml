@@ -1,3 +1,25 @@
+#[POST] Send OTP
+/user/send-otp:
+    put:
+        tags: 
+            - User
+        summary: Send OTP to user email
+        requestBody:
+            required: true
+            content: 
+                application/json:
+                    schema: 
+                        $ref: '#/components/schemas/sendotp'
+        responses: 
+            200:
+                description: 'OTP sent successfully'
+            404:
+                descriptiom: 'User not found'
+            400:
+                description: 'Bad request'
+            500: 
+                description: 'Internal server error'
+
 # [GET] Get User Profile
 /user/profile:
     get:

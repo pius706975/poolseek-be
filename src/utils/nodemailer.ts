@@ -88,7 +88,7 @@ const sendEmail = async (
                     </div>
                     <div class="footer">
                         <p>${footerText}</p>
-                        <p>© ${year} <a href="#">Ticky</a>. All rights reserved.</p>
+                        <p>© ${year} <a href="#">SAMAPOS</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>

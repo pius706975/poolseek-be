@@ -7,9 +7,12 @@ components:
                 - email
                 - password
             properties: 
-                name: 
+                first_name: 
                     type: string
-                    example: Full Name                    
+                    example: Fisrt name
+                last_name: 
+                    type: string
+                    example: Last name                    
                 email:
                     type: string
                     example: email@example.com

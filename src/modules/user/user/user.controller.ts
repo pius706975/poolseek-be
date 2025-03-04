@@ -2,6 +2,20 @@ import { NextFunction, Request, Response } from 'express';
 import userService from './user.service';
 
 const userController = {
+    sendOTP: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const {email} = req.body;
+
+            await userService.sendOTP(email);
+
+            res.status(200).json({
+                message: 'OTP sent successfully',
+            })
+        } catch (error) {
+            next(error);
+        }    
+    },
+
     getUserProfile: async (
         req: Request,
         res: Response,
