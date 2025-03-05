@@ -16,6 +16,19 @@ const userController = {
         }    
     },
 
+    verifyOTP: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userData = req.body
+            await userService.verifyOTP(userData);
+
+            res.status(200).json({
+                message: 'OTP verified successfully',
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
+
     getUserProfile: async (
         req: Request,
         res: Response,

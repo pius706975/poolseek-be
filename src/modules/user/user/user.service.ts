@@ -4,7 +4,8 @@ import { JWT_ACCESS_TOKEN_SECRET } from '@/config';
 import userRepo from './user.repo';
 import generateOTP from '@/utils/generate-otp';
 import sendEmail from '@/utils/nodemailer';
-import { validateSendOTP } from './user.validator';
+import { validateSendOTP, validateVerifyOTP } from './user.validator';
+import { User } from '@/interfaces/user.interface';
 
 const userService = {
     sendOTP: async (email: string) => {
@@ -41,6 +42,30 @@ const userService = {
             });
 
         return updatedUser;
+    },
+
+    verifyOTP: async (userData: User) => {
+        const {error} = validateVerifyOTP(userData);
+        if (error) throw new CustomError(error.details[0].message, 400);
+        
+        const user = await userRepo.getUserByEmail(userData.email);
+        if (!user) throw new CustomError('User not found', 404);
+
+        if (user.otp_code !== userData.otp_code) throw new CustomError('Invalid OTP code', 400);
+
+        const otpExpDate = user.otp_expiration ? new Date(user.otp_expiration) : null;
+
+        const otpExpired = otpExpDate && otpExpDate < new Date();
+
+        if (otpExpired) throw new CustomError('OTP code has expired', 400);
+
+        const verifiedUser = await userRepo.update(user.id, {
+            ...user,
+            is_verified: true,
+            otp_code: '',
+        });
+
+        return verifiedUser;
     },
 
     getUserProfile: async (accessToken: string) => {

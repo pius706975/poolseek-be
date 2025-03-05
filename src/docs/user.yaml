@@ -1,4 +1,4 @@
-#[POST] Send OTP
+#[PUT] Send OTP
 /user/send-otp:
     put:
         tags: 
@@ -13,6 +13,28 @@
         responses: 
             200:
                 description: 'OTP sent successfully'
+            404:
+                descriptiom: 'User not found'
+            400:
+                description: 'Bad request'
+            500: 
+                description: 'Internal server error'
+
+#[PUT] Verify OTP
+/user/verify-otp:
+    put:
+        tags: 
+            - User
+        summary: Verify OTP
+        requestBody:
+            required: true
+            content: 
+                application/json:
+                    schema: 
+                        $ref: '#/components/schemas/verifyotp'
+        responses: 
+            200:
+                description: 'OTP verified successfully'
             404:
                 descriptiom: 'User not found'
             400:

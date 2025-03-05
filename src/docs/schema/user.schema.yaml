@@ -7,3 +7,14 @@ components:
             properties:
                 email:
                     type: string
+
+        verifyotp:
+            type: object
+            required:
+                - email
+                - otp_code
+            properties:
+                email:
+                    type: string
+                otp_code:
+                    type: string

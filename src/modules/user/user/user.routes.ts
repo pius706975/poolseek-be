@@ -5,6 +5,7 @@ import userController from './user.controller';
 const userRouter = express.Router();
 
 userRouter.put('/send-otp', userController.sendOTP);
+userRouter.put('/verify-otp', userController.verifyOTP);
 userRouter.get('/profile', authMiddleware, userController.getUserProfile);
 
 export default userRouter;
