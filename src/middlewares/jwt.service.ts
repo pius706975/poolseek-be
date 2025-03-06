@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 
-export const generateJWT = async (payload: any, secretKey: string) => {
+export const generateJWT = async (payload: any, secretKey: string, expiresIn: string) => {
     try {
-        const token = `Bearer ${jwt.sign(payload, secretKey)}`;
+        const token = `Bearer ${jwt.sign(payload, secretKey, {expiresIn})}`;
         return token;
     } catch (error: any) {
         throw new Error(error.message);

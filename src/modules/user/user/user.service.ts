@@ -6,6 +6,7 @@ import generateOTP from '@/utils/generate-otp';
 import sendEmail from '@/utils/nodemailer';
 import { validateSendOTP, validateVerifyOTP } from './user.validator';
 import { User } from '@/interfaces/user.interface';
+import logger from '@/utils/logger';
 
 const userService = {
     sendOTP: async (email: string) => {
@@ -38,22 +39,26 @@ const userService = {
                 );
             })
             .catch(error => {
-                console.log('Failed to send otp', error);
+                logger.error(`Error sending email: ${error}`);
+                throw new CustomError('Error sending OTP email', 500);
             });
 
         return updatedUser;
     },
 
     verifyOTP: async (userData: User) => {
-        const {error} = validateVerifyOTP(userData);
+        const { error } = validateVerifyOTP(userData);
         if (error) throw new CustomError(error.details[0].message, 400);
-        
+
         const user = await userRepo.getUserByEmail(userData.email);
         if (!user) throw new CustomError('User not found', 404);
 
-        if (user.otp_code !== userData.otp_code) throw new CustomError('Invalid OTP code', 400);
+        if (user.otp_code !== userData.otp_code)
+            throw new CustomError('Invalid OTP code', 400);
 
-        const otpExpDate = user.otp_expiration ? new Date(user.otp_expiration) : null;
+        const otpExpDate = user.otp_expiration
+            ? new Date(user.otp_expiration)
+            : null;
 
         const otpExpired = otpExpDate && otpExpDate < new Date();
 
