@@ -117,7 +117,7 @@ describe('verifyOTPService', () => {
         phone_number: '1234567890',
         password: 'hashedpassword',
         otp_code: '123456',
-        otp_expiration: new Date(Date.now() + 5 * 60 * 1000), // OTP masih valid
+        otp_expiration: new Date(Date.now() + 5 * 60 * 1000),
         is_verified: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -181,7 +181,7 @@ describe('verifyOTPService', () => {
         (validateVerifyOTP as jest.Mock).mockReturnValue({ error: null });
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue({
             ...mockUser,
-            otp_code: '654321', // OTP salah
+            otp_code: '654321',
         });
 
         await expect(userService.verifyOTP({...mockUser, otp_code: '123456'})).rejects.toThrow('Invalid OTP code');
@@ -192,7 +192,7 @@ describe('verifyOTPService', () => {
         (validateVerifyOTP as jest.Mock).mockReturnValue({ error: null });
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue({
             ...mockUser,
-            otp_expiration: new Date(Date.now() - 1 * 60 * 1000), // OTP sudah expired
+            otp_expiration: new Date(Date.now() - 1 * 60 * 1000),
         });
 
         await expect(userService.verifyOTP({...mockUser, otp_code: '123456'})).rejects.toThrow('OTP code has expired');
