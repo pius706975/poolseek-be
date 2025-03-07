@@ -32,3 +32,12 @@ components:
                 password:
                     type: string
                     example: password
+                device_id:
+                    type: string
+                    example: device_id_123
+                device_name:
+                    type: string
+                    example: MacBook Pro
+                device_model:
+                    type: string
+                    example: MacBookPro18,3

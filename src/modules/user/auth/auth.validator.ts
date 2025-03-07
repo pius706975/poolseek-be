@@ -52,6 +52,11 @@ export const validateSignIn = (userData: any) => {
             'any.required': 'Email is required',
         }),
         password: Joi.string().required(),
+        device_id: Joi.string().required().messages({
+            'any.required': 'Device ID is required',
+        }),
+        device_name: Joi.string().optional().default('Unknown Device'),
+        device_model: Joi.string().optional().default('Unknown Model'),
     });
 
     return schema.validate(userData, options);

@@ -181,25 +181,36 @@ describe('signInService', () => {
         updated_at: undefined,
     };
 
+    const mockDevice = {
+        device_id: 'abc123',
+        device_name: 'Samsung Galaxy S21',
+        device_model: 'SM-G991B',
+    };
+
     it('should return user and accessToken if credentials are correct', async () => {
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(mockUser);
         (generateJWT as jest.Mock).mockResolvedValue('mocked_access_token');
         jest.spyOn(require('bcrypt'), 'compareSync').mockReturnValue(true);
 
-        const result = await authService.signIn({
-            email: 'test@example.com',
-            password: 'correct_password',
-            first_name: 'First Name',
-            last_name: 'Last Name',
-            image: 'www.img.com',
-            role_id: 1,
-            phone_number: '0857',
-            otp_code: '123456',
-            otp_expiration: new Date(),
-            is_verified: false,
-            created_at: undefined,
-            updated_at: undefined,
-        });
+        const result = await authService.signIn(
+            {
+                email: 'test@example.com',
+                password: 'correct_password',
+                first_name: 'First Name',
+                last_name: 'Last Name',
+                image: 'www.img.com',
+                role_id: 1,
+                phone_number: '0857',
+                otp_code: '123456',
+                otp_expiration: new Date(),
+                is_verified: false,
+                created_at: undefined,
+                updated_at: undefined,
+            },
+            mockDevice.device_id,
+            mockDevice.device_name,
+            mockDevice.device_model
+        );
 
         expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
             'test@example.com',
@@ -208,6 +219,7 @@ describe('signInService', () => {
         expect(result).toEqual({
             user: mockUser,
             accessToken: 'mocked_access_token',
+            refreshToken: 'mocked_access_token',
         });
     });
 
@@ -215,20 +227,25 @@ describe('signInService', () => {
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(null);
 
         await expect(
-            authService.signIn({
-                email: 'test@example.com',
-                password: 'wrong_password',
-                first_name: 'First Name',
-                last_name: 'Last Name',
-                image: 'www.img.com',
-                role_id: 1,
-                phone_number: '0857',
-                otp_code: '123456',
-                otp_expiration: new Date(),
-                is_verified: false,
-                created_at: undefined,
-                updated_at: undefined,
-            }),
+            authService.signIn(
+                {
+                    email: 'test@example.com',
+                    password: 'wrong_password',
+                    first_name: 'First Name',
+                    last_name: 'Last Name',
+                    image: 'www.img.com',
+                    role_id: 1,
+                    phone_number: '0857',
+                    otp_code: '123456',
+                    otp_expiration: new Date(),
+                    is_verified: false,
+                    created_at: undefined,
+                    updated_at: undefined,
+                },
+                mockDevice.device_id,
+                mockDevice.device_name,
+                mockDevice.device_model
+            ),
         ).rejects.toThrow('Email or password is invalid');
     });
 
@@ -237,20 +254,25 @@ describe('signInService', () => {
         jest.spyOn(require('bcrypt'), 'compareSync').mockReturnValue(false);
 
         await expect(
-            authService.signIn({
-                email: 'test@example.com',
-                password: 'wrong_password',
-                first_name: 'First Name',
-                last_name: 'Last Name',
-                image: 'www.img.com',
-                role_id: 1,
-                phone_number: '0857',
-                otp_code: '123456',
-                otp_expiration: new Date(),
-                is_verified: false,
-                created_at: undefined,
-                updated_at: undefined,
-            }),
+            authService.signIn(
+                {
+                    email: 'test@example.com',
+                    password: 'wrong_password',
+                    first_name: 'First Name',
+                    last_name: 'Last Name',
+                    image: 'www.img.com',
+                    role_id: 1,
+                    phone_number: '0857',
+                    otp_code: '123456',
+                    otp_expiration: new Date(),
+                    is_verified: false,
+                    created_at: undefined,
+                    updated_at: undefined,
+                },
+                mockDevice.device_id,
+                mockDevice.device_name,
+                mockDevice.device_model
+            ),
         ).rejects.toThrow('Email or password is invalid');
     });
 
@@ -262,20 +284,25 @@ describe('signInService', () => {
         });
 
         await expect(
-            authService.signIn({
-                email: '',
-                password: '',
-                first_name: '',
-                last_name: '',
-                image: '',
-                role_id: 0,
-                phone_number: '',
-                otp_code: '',
-                otp_expiration: new Date(),
-                is_verified: false,
-                created_at: undefined,
-                updated_at: undefined,
-            }),
+            authService.signIn(
+                {
+                    email: '',
+                    password: '',
+                    first_name: '',
+                    last_name: '',
+                    image: '',
+                    role_id: 0,
+                    phone_number: '',
+                    otp_code: '',
+                    otp_expiration: new Date(),
+                    is_verified: false,
+                    created_at: undefined,
+                    updated_at: undefined,
+                },
+                mockDevice.device_id,
+                mockDevice.device_name,
+                mockDevice.device_model
+            ),
         ).rejects.toThrow('Email and password are required');
     });
 });

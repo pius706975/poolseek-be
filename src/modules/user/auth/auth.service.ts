@@ -2,7 +2,7 @@ import { User } from '@/interfaces/user.interface';
 import { validateSignIn, validateSignUp } from './auth.validator';
 import { compareSync, hash } from 'bcrypt';
 import { generateJWT } from '@/middlewares/jwt.service';
-import { JWT_ACCESS_TOKEN_SECRET } from '@/config';
+import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from '@/config';
 import { CustomError } from '@/utils/custom-error';
 import authRepo from './auth.repo';
 import generateOTP from '@/utils/generate-otp';
@@ -55,7 +55,7 @@ const authService = {
         return { user: newUserData };
     },
 
-    signIn: async (userData: User) => {
+    signIn: async (userData: User, deviceId: string, deviceName: string, deviceModel: string) => {
         const { error } = validateSignIn(userData);
         if (error) {
             throw new CustomError(error.details[0].message, 400);
@@ -78,10 +78,28 @@ const authService = {
         const accessToken = await generateJWT(
             payload,
             JWT_ACCESS_TOKEN_SECRET as string,
+            '5m',
         );
 
-        return { user, accessToken };
+        const refreshToken = await generateJWT(
+            payload,
+            JWT_REFRESH_TOKEN_SECRET as string,
+            '7d',
+        );
+
+        await authRepo.createAndUpdateRefreshToken(
+            user.id as string,
+            refreshToken,
+            deviceId,
+            deviceName,
+            deviceModel,)
+
+        return { user, accessToken, refreshToken };
     },
+
+    refreshToken: async () => {
+        
+    }
 };
 
 export default authService;

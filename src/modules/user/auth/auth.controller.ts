@@ -27,7 +27,15 @@ const authController = {
     ): Promise<void> => {
         try {
             const userData = req.body;
-            const response = await authService.signIn(userData);
+            const { device_id } = req.body;
+            const deviceName = req.body.device_name || 'Unknown Device';
+            const deviceModel = req.body.device_model || 'Unknown Model';
+            const response = await authService.signIn(
+                userData,
+                device_id,
+                deviceName,
+                deviceModel,
+            );
 
             res.status(200).json({
                 message: 'Successfully signed in',

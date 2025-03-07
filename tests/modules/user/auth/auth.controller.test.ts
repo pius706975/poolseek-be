@@ -69,16 +69,22 @@ describe('signInController', () => {
             accessToken: 'mocked_access_token',
         };
         (authService.signIn as jest.Mock).mockResolvedValue(mockResponse);
-
+    
         await authController.signIn(req as Request, res as Response, next);
-
-        expect(authService.signIn).toHaveBeenCalledWith(req.body);
+    
+        expect(authService.signIn).toHaveBeenCalledWith(
+            req.body,
+            req.body.device_id,
+            req.body.device_name || 'Unknown Device',
+            req.body.device_model || 'Unknown Model'
+        );
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
             message: 'Successfully signed in',
             data: mockResponse,
         });
     });
+    
 
     it('should call next with error if service throws an error', async () => {
         const error = new Error('Invalid credentials');
