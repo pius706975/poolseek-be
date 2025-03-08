@@ -45,6 +45,24 @@ const authController = {
             next(error);
         }
     },
+
+    refreshToken: async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        try {
+            const {user_id, device_id, refresh_token} = req.body;
+            const response = await authService.refreshToken(user_id, device_id, refresh_token)
+
+            res.status(200).json({
+                message: 'Successfully refreshed token',
+                data: response
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
 };
 
 export default authController;

@@ -13,6 +13,7 @@ const authRepo = {
         deviceId: string,
         deviceName: string,
         deviceModel: string,
+        refreshTokenExpiration: Date
     ) => {
         const existingRefreshToken = await authRepo.getRefreshTokenByDevice(
             userId,
@@ -31,6 +32,7 @@ const authRepo = {
                 device_id: deviceId,
                 device_name: deviceName,
                 device_model: deviceModel,
+                refresh_token_expiration: refreshTokenExpiration
             });
         }
     },

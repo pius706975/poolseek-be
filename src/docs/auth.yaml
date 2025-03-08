@@ -45,3 +45,26 @@
                 description: 'Conflict'
             500:
                 description: 'Internal server error'
+
+# [POST] refresh_token
+/auth/refresh-token:
+    post:
+        tags:
+            - Auth
+        summary: Refresh Token
+        requestBody:
+            description: Refresh Token
+            required: true
+            content: 
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/refresh_token'
+        responses: 
+            201:
+                description: 'OK'
+            400: 
+                description: 'Bad Request'
+            401:
+                description: 'Unauthorized'
+            500:
+                description: 'Internal server error'

@@ -10,6 +10,7 @@ export class RefreshTokenModel extends Model<RefreshToken, RefreshTokenCreationA
     public device_id!: string;
     public device_name!: string;
     public device_model!: string;
+    public refresh_token_expiration!: Date;
     public created_at: string | undefined;
     public updated_at: string | undefined;
 
@@ -46,6 +47,10 @@ export default function (sequelize: Sequelize): typeof RefreshTokenModel {
             },
             device_name: {
                 type: DataTypes.STRING(100),
+                allowNull: false,
+            },
+            refresh_token_expiration: {
+                type: DataTypes.DATE,
                 allowNull: false,
             },
             device_model: {

@@ -41,3 +41,20 @@ components:
                 device_model:
                     type: string
                     example: MacBookPro18,3
+
+        refresh_token:
+            type: object
+            required:
+                - user_id
+                - device_id
+                - refresh_token
+            properties:
+                user_id:
+                    type: string
+                    example: user_id_123
+                device_id:
+                    type: string
+                    example: device_id_123
+                refresh_token:
+                    type: string
+                    example: refresh token

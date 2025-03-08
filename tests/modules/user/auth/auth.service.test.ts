@@ -12,6 +12,10 @@ import { generateJWT } from '../../../../src/middlewares/jwt.service';
 import userRepo from '../../../../src/modules/user/user/user.repo';
 import sendEmail from '../../../../src/utils/nodemailer';
 import generateOTP from '../../../../src/utils/generate-otp';
+import {
+    JWT_ACCESS_TOKEN_SECRET,
+    JWT_REFRESH_TOKEN_SECRET,
+} from '../../../../src/config/index';
 
 jest.mock('../../../../src/modules/user/auth/auth.repo');
 jest.mock('../../../../src/modules/user/user/user.repo');
@@ -44,6 +48,11 @@ jest.mock('../../../../src/utils/nodemailer', () => ({
 jest.mock('../../../../src/utils/generate-otp', () => ({
     __esModule: true,
     default: jest.fn(() => '123456'),
+}));
+
+jest.mock('../../../../src/config/index', () => ({
+    JWT_ACCESS_TOKEN_SECRET: 'test_secret',
+    JWT_REFRESH_TOKEN_SECRET: 'test_refresh_secret',
 }));
 
 afterAll(async () => {
@@ -209,7 +218,7 @@ describe('signInService', () => {
             },
             mockDevice.device_id,
             mockDevice.device_name,
-            mockDevice.device_model
+            mockDevice.device_model,
         );
 
         expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
@@ -218,8 +227,8 @@ describe('signInService', () => {
         expect(generateJWT).toHaveBeenCalled();
         expect(result).toEqual({
             user: mockUser,
-            accessToken: 'mocked_access_token',
-            refreshToken: 'mocked_access_token',
+            access_token: 'mocked_access_token',
+            refresh_token: 'mocked_access_token',
         });
     });
 
@@ -244,7 +253,7 @@ describe('signInService', () => {
                 },
                 mockDevice.device_id,
                 mockDevice.device_name,
-                mockDevice.device_model
+                mockDevice.device_model,
             ),
         ).rejects.toThrow('Email or password is invalid');
     });
@@ -271,7 +280,7 @@ describe('signInService', () => {
                 },
                 mockDevice.device_id,
                 mockDevice.device_name,
-                mockDevice.device_model
+                mockDevice.device_model,
             ),
         ).rejects.toThrow('Email or password is invalid');
     });
@@ -301,8 +310,94 @@ describe('signInService', () => {
                 },
                 mockDevice.device_id,
                 mockDevice.device_name,
-                mockDevice.device_model
+                mockDevice.device_model,
             ),
         ).rejects.toThrow('Email and password are required');
+    });
+});
+
+describe('refreshTokenService', () => {
+    const mockUser = {
+        id: 'user123',
+        email: 'test@example.com',
+    };
+
+    const mockRefreshToken = {
+        id: 'token123',
+        user_id: mockUser.id,
+        refresh_token: 'valid_refresh_token',
+        device_id: 'device123',
+        device_name: 'iPhone',
+        device_model: 'iPhone 12',
+        refresh_token_expiration: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ),
+        created_at: undefined,
+        updated_at: undefined,
+    };
+
+    it('should return a new access token if refresh token is valid', async () => {
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
+        (authRepo.getRefreshTokenByDevice as jest.Mock).mockResolvedValue(
+            mockRefreshToken,
+        );
+
+        (generateJWT as jest.Mock).mockImplementation(payload => {
+            return 'new_access_token';
+        });
+
+        const result = await authService.refreshToken(
+            mockUser.id,
+            'device123',
+            'valid_refresh_token',
+        );
+
+        expect(result).toEqual({ access_token: 'new_access_token' });
+        expect(generateJWT).toHaveBeenCalledWith(
+            { userId: mockUser.id },
+            expect.any(String),
+            '15m',
+        );
+    });
+
+    it('should throw an error if user is not found', async () => {
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(null);
+
+        await expect(
+            authService.refreshToken(
+                'invalidUser',
+                'device123',
+                'refreshToken',
+            ),
+        ).rejects.toThrow(new CustomError('User not found', 404));
+    });
+
+    it('should throw an error if refresh token is not found or does not match', async () => {
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
+        (authRepo.getRefreshTokenByDevice as jest.Mock).mockResolvedValue(null);
+
+        await expect(
+            authService.refreshToken(mockUser.id, 'device123', 'invalid_token'),
+        ).rejects.toThrow(new CustomError('Invalid refresh token', 401));
+    });
+
+    it('should throw an error if refresh token is expired', async () => {
+        const expiredToken = {
+            ...mockRefreshToken,
+            refresh_token_expiration: new Date(Date.now() - 1000),
+        };
+
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
+        (authRepo.getRefreshTokenByDevice as jest.Mock).mockResolvedValue(
+            expiredToken,
+        );
+
+        await expect(
+            authService.refreshToken(
+                mockUser.id,
+                'device123',
+                'valid_refresh_token',
+            ),
+        ).rejects.toThrow(new CustomError('Refresh token has expired', 401));
     });
 });

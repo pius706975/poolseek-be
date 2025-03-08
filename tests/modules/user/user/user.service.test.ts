@@ -207,25 +207,25 @@ describe('getUserProfileService', () => {
 
     it('should return user profile when accessToken is valid', async () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
-        (authRepo.getUserProfile as jest.Mock).mockResolvedValue(mockUser);
+        (authRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
 
         const result = await userService.getUserProfile(mockAccessToken);
 
         expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, JWT_ACCESS_TOKEN_SECRET);
-        expect(authRepo.getUserProfile).toHaveBeenCalledWith(mockUserId);
+        expect(authRepo.getUserById).toHaveBeenCalledWith(mockUserId);
         expect(result).toEqual(mockUser);
     });
 
     it('should throw an error if user is not found', async () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
-        (authRepo.getUserProfile as jest.Mock).mockResolvedValue(null);
+        (authRepo.getUserById as jest.Mock).mockResolvedValue(null);
 
         await expect(userService.getUserProfile(mockAccessToken)).rejects.toThrow(
             new CustomError('User not found', 404),
         );
 
         expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, expect.any(String));
-        expect(authRepo.getUserProfile).toHaveBeenCalledWith(mockUserId);
+        expect(authRepo.getUserById).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should throw an error if token verification fails', async () => {
@@ -234,7 +234,7 @@ describe('getUserProfileService', () => {
         await expect(userService.getUserProfile(mockAccessToken)).rejects.toThrow('Invalid token');
     
         expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, expect.any(String));
-        expect(authRepo.getUserProfile).not.toHaveBeenCalled();
+        expect(authRepo.getUserById).not.toHaveBeenCalled();
     });
     
 });

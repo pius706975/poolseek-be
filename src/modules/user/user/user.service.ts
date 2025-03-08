@@ -81,7 +81,7 @@ const userService = {
 
         const userId = decodeToken.userId;
 
-        const user = await userRepo.getUserProfile(userId);
+        const user = await userRepo.getUserById(userId);
         if (!user) {
             throw new CustomError('User not found', 404);
         }
