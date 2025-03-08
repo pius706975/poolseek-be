@@ -46,6 +46,31 @@ const authController = {
         }
     },
 
+    signOut: async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        try {
+            const authorization = req.headers.authorization;
+            if (!authorization) {
+                res.status(404).json({ message: 'User not found' });
+                return;
+            }
+
+            const accessToken = authorization.split(' ')[1];
+            const {device_id} = req.body;
+
+            await authService.signOut(accessToken, device_id);
+
+            res.status(200).json({
+                message: 'Successfully signed out'
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
+
     refreshToken: async (
         req: Request,
         res: Response,
@@ -62,7 +87,7 @@ const authController = {
         } catch (error) {
             next(error);
         }
-    },
+    }
 };
 
 export default authController;

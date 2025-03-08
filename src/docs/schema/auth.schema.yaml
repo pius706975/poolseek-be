@@ -58,3 +58,12 @@ components:
                 refresh_token:
                     type: string
                     example: refresh token
+
+        signout:
+            type: object
+            required:
+                - device_id
+            properties:
+                device_id:
+                    type: string
+                    example: device_id_123

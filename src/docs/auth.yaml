@@ -68,3 +68,35 @@
                 description: 'Unauthorized'
             500:
                 description: 'Internal server error'
+
+# [POST] signout
+/auth/signout:
+    post:
+        tags:
+            - Auth
+        summary: Sign Out
+        requestBody:
+            description: Sign Out
+            required: true
+            content: 
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/signout'
+        responses: 
+            200:
+                description: 'OK'
+            400: 
+                description: 'Bad Request'
+            401:
+                description: 'Unauthorized'
+            500:
+                description: 'Internal server error'
+        security:
+            - bearerAuth: []
+
+securityDefinitions:
+    bearerAuth:
+        type: apiKey
+        name: Authorization
+        in: header
+        description: 'JWT Bearer token for authorization. Example: "Bearer {token}"'

@@ -1,7 +1,7 @@
 import { User } from '@/interfaces/user.interface';
 import { validateSignIn, validateSignUp } from './auth.validator';
 import { compareSync, hash } from 'bcrypt';
-import { generateJWT } from '@/middlewares/jwt.service';
+import { generateJWT, verifyJWT } from '@/middlewares/jwt.service';
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from '@/config';
 import { CustomError } from '@/utils/custom-error';
 import authRepo from './auth.repo';
@@ -110,6 +110,28 @@ const authService = {
         return { user, access_token: accessToken, refresh_token: refreshToken };
     },
 
+    signOut: async (accessToken: string, deviceId: string) => {
+        const decodeToken = await verifyJWT(
+            accessToken,
+            JWT_ACCESS_TOKEN_SECRET as string,
+        );
+
+        const userId = decodeToken.userId;
+
+        const user = await userRepo.getUserById(userId);
+        if (!user) throw new CustomError('User not found', 404);
+
+        const deleteRefreshToken = await authRepo.deleteRefreshTokenByDevice(
+            user.id!,
+            deviceId,
+        );
+
+        if (!deleteRefreshToken)
+            throw new CustomError('Refresh token not found', 404);
+
+        return deleteRefreshToken;
+    },
+
     refreshToken: async (
         userId: string,
         deviceId: string,
@@ -145,7 +167,7 @@ const authService = {
         );
 
         return { access_token: newAccessToken };
-    },
+    }
 };
 
 export default authService;

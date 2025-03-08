@@ -8,7 +8,7 @@ import {
     validateSignUp,
     validateSignIn,
 } from '../../../../src/modules/user/auth/auth.validator';
-import { generateJWT } from '../../../../src/middlewares/jwt.service';
+import { generateJWT, verifyJWT } from '../../../../src/middlewares/jwt.service';
 import userRepo from '../../../../src/modules/user/user/user.repo';
 import sendEmail from '../../../../src/utils/nodemailer';
 import generateOTP from '../../../../src/utils/generate-otp';
@@ -313,6 +313,65 @@ describe('signInService', () => {
                 mockDevice.device_model,
             ),
         ).rejects.toThrow('Email and password are required');
+    });
+});
+
+describe('signOutService', () => {
+    const mockAccessToken = 'valid_access_token';
+    const mockDeviceId = 'device123';
+    const mockUserId = 'user123';
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should successfully sign out and delete the refresh token', async () => {
+        (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
+        (userRepo.getUserById as jest.Mock).mockResolvedValue({ id: mockUserId });
+        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(true);
+
+        const result = await authService.signOut(mockAccessToken, mockDeviceId);
+
+        expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, 'test_secret');
+        expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
+        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(mockUserId, mockDeviceId);
+        expect(result).toBe(true);
+    });
+
+    it('should throw error if token is invalid', async () => {
+        (verifyJWT as jest.Mock).mockRejectedValue(new Error('Invalid token'));
+
+        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
+            new Error('Invalid token')
+        );
+
+        expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, 'test_secret');
+        expect(userRepo.getUserById).not.toHaveBeenCalled();
+        expect(authRepo.deleteRefreshTokenByDevice).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if user is not found', async () => {
+        (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(null);
+
+        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
+            new CustomError('User not found', 404)
+        );
+
+        expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
+        expect(authRepo.deleteRefreshTokenByDevice).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if refresh token is not found', async () => {
+        (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
+        (userRepo.getUserById as jest.Mock).mockResolvedValue({ id: mockUserId });
+        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(false);
+
+        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
+            new CustomError('Refresh token not found', 404)
+        );
+
+        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(mockUserId, mockDeviceId);
     });
 });
 
