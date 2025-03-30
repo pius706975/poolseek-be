@@ -13,7 +13,7 @@ const authRepo = {
         deviceId: string,
         deviceName: string,
         deviceModel: string,
-        refreshTokenExpiration: Date
+        refreshTokenExpiration: Date,
     ) => {
         const existingRefreshToken = await authRepo.getRefreshTokenByDevice(
             userId,
@@ -32,7 +32,7 @@ const authRepo = {
                 device_id: deviceId,
                 device_name: deviceName,
                 device_model: deviceModel,
-                refresh_token_expiration: refreshTokenExpiration
+                refresh_token_expiration: refreshTokenExpiration,
             });
         }
     },
@@ -43,6 +43,12 @@ const authRepo = {
                 user_id: userId,
                 device_id: deviceId,
             },
+        });
+    },
+
+    resetPassword: async (email: string, userData: { password: string }) => {
+        return await DB.Users.update(userData, {
+            where: { email },
         });
     },
 

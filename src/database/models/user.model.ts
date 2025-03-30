@@ -8,6 +8,8 @@ export class UserModel
     implements User
 {
     public id!: string;
+    public firebase_id!: string;
+    public google_id!: string;
     public email!: string;
     public first_name!: string;
     public last_name!: string;
@@ -32,6 +34,14 @@ export default function (sequelize: Sequelize): typeof UserModel {
                 primaryKey: true,
                 type: DataTypes.UUIDV4,
                 defaultValue: DataTypes.UUIDV4,
+            },
+            firebase_id: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+            google_id: {
+                type: DataTypes.STRING,
+                allowNull: true,
             },
             email: {
                 allowNull: false,

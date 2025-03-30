@@ -7,11 +7,13 @@ jest.mock('../../../../src/modules/user/user/user.service', () => ({
     sendOTP: jest.fn(),
     verifyOTP: jest.fn(),
     getUserProfile: jest.fn(),
+    updatePassword: jest.fn(),
 }));
 
 beforeEach(() => {
     jest.clearAllMocks(); 
 });
+
 
 describe('sendOTPController', () => {
     let req: Partial<Request>;
@@ -161,6 +163,64 @@ describe('getUserProfileController', () => {
         await userController.getUserProfile(req as Request, res as Response, next);
 
         expect(userService.getUserProfile).toHaveBeenCalledWith('mockAccessToken');
+        expect(next).toHaveBeenCalledWith(error);
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.json).not.toHaveBeenCalled();
+    });
+});
+
+describe('updatePasswordController', () => {
+    let req: Partial<Request>;
+    let res: Partial<Response>;
+    let next: NextFunction;
+
+    beforeEach(() => {
+        req = {
+            headers: {
+                authorization: 'Bearer mockAccessToken',
+            },
+            body: {
+                password: 'NewPassword123!',
+            },
+        };
+
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+        };
+
+        next = jest.fn();
+
+        jest.clearAllMocks();
+    });
+
+    it('should update password successfully and return 200', async () => {
+        (userService.updatePassword as jest.Mock).mockResolvedValue(undefined);
+
+        await userController.updatePassword(req as Request, res as Response, next);
+
+        expect(userService.updatePassword).toHaveBeenCalledWith('mockAccessToken', { password: 'NewPassword123!' });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Password updated successfully' });
+    });
+
+    it('should return 404 if authorization header is missing', async () => {
+        req.headers!.authorization = undefined;
+
+        await userController.updatePassword(req as Request, res as Response, next);
+
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({ message: 'User not found' });
+        expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('should call next with error if updatePasswordService throws an error', async () => {
+        const error = new CustomError('Failed to update password', 500);
+        (userService.updatePassword as jest.Mock).mockRejectedValue(error);
+
+        await userController.updatePassword(req as Request, res as Response, next);
+
+        expect(userService.updatePassword).toHaveBeenCalledWith('mockAccessToken', { password: 'NewPassword123!' });
         expect(next).toHaveBeenCalledWith(error);
         expect(res.status).not.toHaveBeenCalled();
         expect(res.json).not.toHaveBeenCalled();

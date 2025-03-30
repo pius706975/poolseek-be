@@ -18,3 +18,11 @@ components:
                     type: string
                 otp_code:
                     type: string
+
+        updatepassword:
+            type: object
+            required:
+                - password
+            properties:
+                password:
+                    type: string

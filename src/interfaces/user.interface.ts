@@ -1,5 +1,7 @@
 export interface User {
     id?: string;
+    firebase_id?: string;
+    google_id?: string;
     email: string;
     first_name: string;
     last_name: string;

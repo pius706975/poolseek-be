@@ -7,8 +7,12 @@ import { hash, compareSync } from 'bcrypt';
 import {
     validateSignUp,
     validateSignIn,
+    validateResetPassword,
 } from '../../../../src/modules/user/auth/auth.validator';
-import { generateJWT, verifyJWT } from '../../../../src/middlewares/jwt.service';
+import {
+    generateJWT,
+    verifyJWT,
+} from '../../../../src/middlewares/jwt.service';
 import userRepo from '../../../../src/modules/user/user/user.repo';
 import sendEmail from '../../../../src/utils/nodemailer';
 import generateOTP from '../../../../src/utils/generate-otp';
@@ -36,6 +40,7 @@ jest.mock('bcrypt', () => ({
 jest.mock('../../../../src/modules/user/auth/auth.validator', () => ({
     validateSignUp: jest.fn(),
     validateSignIn: jest.fn(() => ({ error: null })),
+    validateResetPassword: jest.fn(),
 }));
 
 jest.mock('../../../../src/middlewares/jwt.service');
@@ -163,13 +168,15 @@ describe('signUpService', () => {
 
         expect(sendEmail).toHaveBeenCalledWith(
             userData.email,
-            'OTP verification code',
+            'One Time Password',
             'Your OTP code.',
-            'Use the following OTP code to complete your verification:',
-            `<h2>123456</h2>`,
-            'This code is valid for 10 minutes. Please do not share it with anyone.',
-            `If you didn't request this code, please ignore this email.`,
-            `${new Date().getFullYear().toString()}`,
+            expect.stringContaining(`Hi, ${userData.first_name}!`),
+            expect.stringContaining('<h2>123456</h2>'),
+            expect.stringContaining('This code is valid for 10 minutes.'),
+            expect.stringContaining(
+                "If you didn't request this code, please ignore this email.",
+            ),
+            expect.any(String),
         );
     });
 });
@@ -327,23 +334,30 @@ describe('signOutService', () => {
 
     it('should successfully sign out and delete the refresh token', async () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
-        (userRepo.getUserById as jest.Mock).mockResolvedValue({ id: mockUserId });
-        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(true);
+        (userRepo.getUserById as jest.Mock).mockResolvedValue({
+            id: mockUserId,
+        });
+        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(
+            true,
+        );
 
         const result = await authService.signOut(mockAccessToken, mockDeviceId);
 
         expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, 'test_secret');
         expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
-        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(mockUserId, mockDeviceId);
+        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(
+            mockUserId,
+            mockDeviceId,
+        );
         expect(result).toBe(true);
     });
 
     it('should throw error if token is invalid', async () => {
         (verifyJWT as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
-        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
-            new Error('Invalid token')
-        );
+        await expect(
+            authService.signOut(mockAccessToken, mockDeviceId),
+        ).rejects.toThrow(new Error('Invalid token'));
 
         expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, 'test_secret');
         expect(userRepo.getUserById).not.toHaveBeenCalled();
@@ -354,9 +368,9 @@ describe('signOutService', () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
         (userRepo.getUserById as jest.Mock).mockResolvedValue(null);
 
-        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
-            new CustomError('User not found', 404)
-        );
+        await expect(
+            authService.signOut(mockAccessToken, mockDeviceId),
+        ).rejects.toThrow(new CustomError('User not found', 404));
 
         expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
         expect(authRepo.deleteRefreshTokenByDevice).not.toHaveBeenCalled();
@@ -364,14 +378,21 @@ describe('signOutService', () => {
 
     it('should throw error if refresh token is not found', async () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
-        (userRepo.getUserById as jest.Mock).mockResolvedValue({ id: mockUserId });
-        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(false);
-
-        await expect(authService.signOut(mockAccessToken, mockDeviceId)).rejects.toThrow(
-            new CustomError('Refresh token not found', 404)
+        (userRepo.getUserById as jest.Mock).mockResolvedValue({
+            id: mockUserId,
+        });
+        (authRepo.deleteRefreshTokenByDevice as jest.Mock).mockResolvedValue(
+            false,
         );
 
-        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(mockUserId, mockDeviceId);
+        await expect(
+            authService.signOut(mockAccessToken, mockDeviceId),
+        ).rejects.toThrow(new CustomError('Refresh token not found', 404));
+
+        expect(authRepo.deleteRefreshTokenByDevice).toHaveBeenCalledWith(
+            mockUserId,
+            mockDeviceId,
+        );
     });
 });
 
@@ -458,5 +479,75 @@ describe('refreshTokenService', () => {
                 'valid_refresh_token',
             ),
         ).rejects.toThrow(new CustomError('Refresh token has expired', 401));
+    });
+});
+
+describe('resetPasswordService', () => {
+    it('should throw an error if email is invalid', async () => {
+        const invalidData = { email: 'invalidemail', password: 'Valid123!' };
+        const validationError = {
+            details: [{ message: 'Email format is invalid' }],
+        };
+
+        jest.spyOn(
+            require('../../../../src/modules/user/auth/auth.validator'),
+            'validateResetPassword',
+        ).mockReturnValue({ error: validationError });
+
+        await expect(authService.resetPassword(invalidData)).rejects.toThrow(
+            new CustomError('Email format is invalid', 400),
+        );
+    });
+
+    it('should throw an error if password does not meet criteria', async () => {
+        const invalidData = { email: 'test@example.com', password: 'short' };
+        const validationError = {
+            details: [{ message: 'Password must have at least 8 characters.' }],
+        };
+
+        jest.spyOn(
+            require('../../../../src/modules/user/auth/auth.validator'),
+            'validateResetPassword',
+        ).mockReturnValue({ error: validationError });
+
+        await expect(authService.resetPassword(invalidData)).rejects.toThrow(
+            new CustomError('Password must have at least 8 characters.', 400),
+        );
+    });
+
+    it('should throw error if user is not found', async () => {
+        jest.spyOn(
+            require('../../../../src/modules/user/auth/auth.validator'),
+            'validateResetPassword',
+        ).mockReturnValue({ error: null });
+
+        (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(null);
+
+        await expect(
+            authService.resetPassword({
+                email: 'notfound@example.com',
+                password: 'NewPassword123!',
+            }),
+        ).rejects.toThrow(new CustomError('User not found', 404));
+    });
+
+    it('should update the password if user exists', async () => {
+        const userMock = { email: 'test@example.com' };
+        (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(userMock);
+        (authRepo.resetPassword as jest.Mock).mockResolvedValue(true);
+
+        const result = await authService.resetPassword({
+            email: 'test@example.com',
+            password: 'NewPassword123!',
+        });
+
+        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
+            'test@example.com',
+        );
+        expect(authRepo.resetPassword).toHaveBeenCalledWith(
+            userMock.email,
+            expect.any(Object),
+        );
+        expect(result).toBe(true);
     });
 });

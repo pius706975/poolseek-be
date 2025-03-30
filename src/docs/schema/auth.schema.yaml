@@ -42,7 +42,7 @@ components:
                     type: string
                     example: MacBookPro18,3
 
-        refresh_token:
+        refreshtoken:
             type: object
             required:
                 - user_id
@@ -67,3 +67,14 @@ components:
                 device_id:
                     type: string
                     example: device_id_123
+
+        resetpassword:
+            type: object
+            required:
+                - email
+                - password
+            properties:
+                email:
+                    type: string
+                password:
+                    type: string

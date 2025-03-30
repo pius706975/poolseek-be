@@ -42,6 +42,28 @@
             500: 
                 description: 'Internal server error'
 
+# [PUT] Update Password
+/user/update-password:
+    put:
+        tags: 
+            - User
+        summary: Update Password
+        requestBody:
+            required: true
+            content: 
+                application/json:
+                    schema: 
+                        $ref: '#/components/schemas/updatepassword'
+        responses: 
+            200:
+                description: 'OTP verified successfully'
+            404:
+                descriptiom: 'User not found'
+            400:
+                description: 'Bad request'
+            500: 
+                description: 'Internal server error'
+
 # [GET] Get User Profile
 /user/profile:
     get:

@@ -10,9 +10,7 @@ const userRepo = {
         return await DB.Users.findOne({ where: { email } });
     },
 
-    getUserById: async (
-        userId: string | undefined,
-    ): Promise<User | null> => {
+    getUserById: async (userId: string | undefined): Promise<User | null> => {
         return await DB.Users.findOne({ where: { id: userId } });
     },
 };

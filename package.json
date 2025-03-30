@@ -1,11 +1,12 @@
 {
-    "name": "SAMAPOS",
+    "name": "STACK SEEK",
     "version": "1.0.0",
-    "description": "Samarinda POS Platform",
+    "description": "Q&A Platform",
     "main": "server.ts",
     "scripts": {
         "test": "jest",
         "test:watch": "jest --watch",
+        "postinstall": "husky install",
         "start": "node dist/server.js",
         "dev": "nodemon",
         "build": "tsc && tsc-alias && echo 'Build Finished! 👍'",
@@ -13,13 +14,14 @@
         "lint:fix": "npm run lint -- --fix",
         "migration:generate": "sequelize migration:generate --name",
         "migration": "sequelize db:migrate",
+        "migration:dev": "sequelize db:migrate && sequelize db:seed:all",
         "migration:down": "sequelize db:migrate:undo:all"
     },
     "author": "Pius Restiantoro",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/pius706975/express-typescript-sequelize-boilerplate.git"
+        "url": "https://github.com/pius706975/stack-seek-be.git"
     },
     "dependencies": {
         "bcrypt": "^5.1.1",
@@ -58,7 +60,9 @@
         "eslint": "^8.20.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.2.1",
+        "husky": "^9.1.7",
         "jest": "^29.7.0",
+        "lint-staged": "^15.5.0",
         "nodemon": "^3.1.7",
         "prettier": "^2.7.1",
         "sequelize-cli": "^6.6.2",

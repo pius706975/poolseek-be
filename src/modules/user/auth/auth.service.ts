@@ -1,5 +1,9 @@
 import { User } from '@/interfaces/user.interface';
-import { validateSignIn, validateSignUp } from './auth.validator';
+import {
+    validateResetPassword,
+    validateSignIn,
+    validateSignUp,
+} from './auth.validator';
 import { compareSync, hash } from 'bcrypt';
 import { generateJWT, verifyJWT } from '@/middlewares/jwt.service';
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from '@/config';
@@ -41,9 +45,11 @@ const authService = {
             .then(() => {
                 sendEmail(
                     userData.email,
-                    'OTP verification code',
+                    'One Time Password',
                     `Your OTP code.`,
-                    'Use the following OTP code to complete your verification:',
+                    `Hi, ${userData.first_name}!<br>
+                    Thank you for registering on Stack Seek.<br><br>
+                    Use the following OTP code to complete your verification:`,
                     `<h2>${otpCode}</h2>`,
                     'This code is valid for 10 minutes. Please do not share it with anyone.',
                     `If you didn't request this code, please ignore this email.`,
@@ -132,6 +138,23 @@ const authService = {
         return deleteRefreshToken;
     },
 
+    resetPassword: async (userData: { email: string; password: string }) => {
+        const { error } = validateResetPassword(userData);
+        if (error) {
+            throw new CustomError(error.details[0].message, 400);
+        }
+
+        const user = await userRepo.getUserByEmail(userData.email);
+        if (!user) throw new CustomError('User not found', 404);
+
+        const hashedPassword = await hash(userData.password, 10);
+        const updatedPassword = await authRepo.resetPassword(user.email, {
+            password: hashedPassword,
+        });
+
+        return updatedPassword;
+    },
+
     refreshToken: async (
         userId: string,
         deviceId: string,
@@ -167,7 +190,7 @@ const authService = {
         );
 
         return { access_token: newAccessToken };
-    }
+    },
 };
 
 export default authService;

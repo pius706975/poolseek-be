@@ -46,5 +46,10 @@ export const {
 } = process.env;
 
 // nodemailer
-export const { MAILER_EMAIL, MAILER_PASSWORD, MAILER_HOST, MAILER_PORT } =
-    process.env;
+export const {
+    MAILER_EMAIL,
+    MAILER_SENDER_NAME,
+    MAILER_PASSWORD,
+    MAILER_HOST,
+    MAILER_PORT,
+} = process.env;

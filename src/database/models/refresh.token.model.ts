@@ -1,9 +1,12 @@
-import { RefreshToken } from "@/interfaces/refresh.token.interfaces";
-import { DataTypes, Model, Optional, Sequelize } from "sequelize";
+import { RefreshToken } from '@/interfaces/refresh.token.interfaces';
+import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
-export type RefreshTokenCreationAttributes = Optional<RefreshToken, "id">
+export type RefreshTokenCreationAttributes = Optional<RefreshToken, 'id'>;
 
-export class RefreshTokenModel extends Model<RefreshToken, RefreshTokenCreationAttributes> implements RefreshToken {
+export class RefreshTokenModel
+    extends Model<RefreshToken, RefreshTokenCreationAttributes>
+    implements RefreshToken
+{
     public id!: string;
     public user_id!: string;
     public refresh_token!: string;
@@ -67,6 +70,6 @@ export default function (sequelize: Sequelize): typeof RefreshTokenModel {
             updatedAt: 'updated_at',
             timestamps: true,
         },
-    )
-    return RefreshTokenModel
+    );
+    return RefreshTokenModel;
 }

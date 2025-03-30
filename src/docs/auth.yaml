@@ -58,7 +58,7 @@
             content: 
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/refresh_token'
+                        $ref: '#/components/schemas/refreshtoken'
         responses: 
             201:
                 description: 'OK'
@@ -82,6 +82,31 @@
                 application/json:
                     schema:
                         $ref: '#/components/schemas/signout'
+        responses: 
+            200:
+                description: 'OK'
+            400: 
+                description: 'Bad Request'
+            401:
+                description: 'Unauthorized'
+            500:
+                description: 'Internal server error'
+        security:
+            - bearerAuth: []
+
+# [PUT] resetpassword
+/auth/reset-password:
+    put:
+        tags:
+            - Auth
+        summary: Reset Password
+        requestBody:
+            description: Reset Password
+            required: true
+            content: 
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/resetpassword'
         responses: 
             200:
                 description: 'OK'

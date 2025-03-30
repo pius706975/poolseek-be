@@ -3,27 +3,34 @@ import { verifyJWT } from '../../../../src/middlewares/jwt.service';
 import authRepo from '../../../../src/modules/user/user/user.repo';
 import { CustomError } from '../../../../src/utils/custom-error';
 import { JWT_ACCESS_TOKEN_SECRET } from '../../../../src/config/index';
-import { validateSendOTP, validateVerifyOTP } from '../../../../src/modules/user/user/user.validator';
+import {
+    validateSendOTP,
+    validateUpdatePassword,
+    validateVerifyOTP,
+} from '../../../../src/modules/user/user/user.validator';
 import generateOTP from '../../../../src/utils/generate-otp';
 import sendEmail from '../../../../src/utils/nodemailer';
 import userRepo from '../../../../src/modules/user/user/user.repo';
+import { hash } from 'bcrypt';
+import { User } from '../../../../src/interfaces/user.interface';
 
 jest.mock('../../../../src/utils/generate-otp');
 jest.mock('../../../../src/middlewares/jwt.service');
 jest.mock('../../../../src/modules/user/user/user.repo');
 
-jest.mock('../../../../src/database', ()=>({
+jest.mock('../../../../src/database', () => ({
     DB: {
         sequelize: {
             close: jest.fn(),
             authenticate: jest.fn(),
-        }
-    }
+        },
+    },
 }));
 
 jest.mock('../../../../src/modules/user/user/user.validator', () => ({
     validateSendOTP: jest.fn(),
     validateVerifyOTP: jest.fn(),
+    validateUpdatePassword: jest.fn().mockReturnValue({ error: null }),
 }));
 
 jest.mock('../../../../src/utils/nodemailer', () => ({
@@ -32,7 +39,11 @@ jest.mock('../../../../src/utils/nodemailer', () => ({
 }));
 
 jest.mock('../../../../src/config/index', () => ({
-    JWT_ACCESS_TOKEN_SECRET: 'mock_secret_key'
+    JWT_ACCESS_TOKEN_SECRET: 'mock_secret_key',
+}));
+
+jest.mock('bcrypt', () => ({
+    hash: jest.fn(),
 }));
 
 beforeEach(() => {
@@ -44,6 +55,7 @@ describe('sendOTPService', () => {
     const mockUser = {
         id: 'user123',
         email: 'user@example.com',
+        first_name: 'First Name',
         otp_code: '',
         otp_expiration: null,
     };
@@ -73,13 +85,15 @@ describe('sendOTPService', () => {
         });
         expect(sendEmail).toHaveBeenCalledWith(
             mockEmail,
-            'OTP verification code',
+            'One Time Password',
             'Your OTP code.',
-            'Use the following OTP code to complete your verification:',
-            `<h2>${mockOTP}</h2>`,
-            'This code is valid for 10 minutes. Please do not share it with anyone.',
-            'If you didn\'t request this code, please ignore this email.',
-            `${new Date().getFullYear().toString()}`,
+            expect.stringContaining(`Hi, ${mockUser.first_name}!`),
+            expect.stringContaining('<h2>123456</h2>'),
+            expect.stringContaining('This code is valid for 10 minutes.'),
+            expect.stringContaining(
+                "If you didn't request this code, please ignore this email.",
+            ),
+            expect.any(String),
         );
         expect(result).toEqual({
             ...mockUser,
@@ -93,7 +107,9 @@ describe('sendOTPService', () => {
             error: { details: [{ message: 'Email is required' }] },
         });
 
-        await expect(userService.sendOTP(mockEmail)).rejects.toThrow('Email is required');
+        await expect(userService.sendOTP(mockEmail)).rejects.toThrow(
+            'Email is required',
+        );
         expect(validateSendOTP).toHaveBeenCalledWith(mockEmail);
     });
 
@@ -101,7 +117,9 @@ describe('sendOTPService', () => {
         (validateSendOTP as jest.Mock).mockReturnValue({ error: null });
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(null);
 
-        await expect(userService.sendOTP(mockEmail)).rejects.toThrow('User not found');
+        await expect(userService.sendOTP(mockEmail)).rejects.toThrow(
+            'User not found',
+        );
         expect(userRepo.getUserByEmail).toHaveBeenCalledWith(mockEmail);
     });
 });
@@ -141,11 +159,17 @@ describe('verifyOTPService', () => {
             otp_code: '',
         });
 
-        const result = await userService.verifyOTP({ ...mockUser, otp_code: '123456' });
+        const result = await userService.verifyOTP({
+            ...mockUser,
+            otp_code: '123456',
+        });
 
-
-        expect(validateVerifyOTP).toHaveBeenCalledWith(expect.objectContaining(mockRequestData));
-        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(mockRequestData.email);
+        expect(validateVerifyOTP).toHaveBeenCalledWith(
+            expect.objectContaining(mockRequestData),
+        );
+        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
+            mockRequestData.email,
+        );
         expect(userRepo.update).toHaveBeenCalledWith(mockUser.id, {
             ...mockUser,
             is_verified: true,
@@ -163,18 +187,28 @@ describe('verifyOTPService', () => {
             error: { details: [{ message: 'OTP code is required' }] },
         });
 
-        await expect(userService.verifyOTP({ ...mockUser, otp_code: mockRequestData.otp_code })).rejects.toThrow('OTP code is required');
+        await expect(
+            userService.verifyOTP({
+                ...mockUser,
+                otp_code: mockRequestData.otp_code,
+            }),
+        ).rejects.toThrow('OTP code is required');
 
-        expect(validateVerifyOTP).toHaveBeenCalledWith(expect.objectContaining(mockRequestData));
-
+        expect(validateVerifyOTP).toHaveBeenCalledWith(
+            expect.objectContaining(mockRequestData),
+        );
     });
 
     it('should throw 404 error if user is not found', async () => {
         (validateVerifyOTP as jest.Mock).mockReturnValue({ error: null });
         (userRepo.getUserByEmail as jest.Mock).mockResolvedValue(null);
 
-        await expect(userService.verifyOTP({...mockUser, otp_code: '123456'})).rejects.toThrow('User not found');
-        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(mockRequestData.email);
+        await expect(
+            userService.verifyOTP({ ...mockUser, otp_code: '123456' }),
+        ).rejects.toThrow('User not found');
+        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
+            mockRequestData.email,
+        );
     });
 
     it('should throw 400 error if OTP code is incorrect', async () => {
@@ -184,8 +218,12 @@ describe('verifyOTPService', () => {
             otp_code: '654321',
         });
 
-        await expect(userService.verifyOTP({...mockUser, otp_code: '123456'})).rejects.toThrow('Invalid OTP code');
-        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(mockRequestData.email);
+        await expect(
+            userService.verifyOTP({ ...mockUser, otp_code: '123456' }),
+        ).rejects.toThrow('Invalid OTP code');
+        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
+            mockRequestData.email,
+        );
     });
 
     it('should throw 400 error if OTP code has expired', async () => {
@@ -195,15 +233,126 @@ describe('verifyOTPService', () => {
             otp_expiration: new Date(Date.now() - 1 * 60 * 1000),
         });
 
-        await expect(userService.verifyOTP({...mockUser, otp_code: '123456'})).rejects.toThrow('OTP code has expired');
-        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(mockRequestData.email);
+        await expect(
+            userService.verifyOTP({ ...mockUser, otp_code: '123456' }),
+        ).rejects.toThrow('OTP code has expired');
+        expect(userRepo.getUserByEmail).toHaveBeenCalledWith(
+            mockRequestData.email,
+        );
+    });
+});
+
+describe('updatePasswordService', () => {
+    const mockAccessToken = 'mockAccessToken';
+    const mockUserId = 'user123';
+    const mockUser = {
+        id: mockUserId,
+        email: 'user@example.com',
+        password: 'oldHashedPassword',
+    };
+    const mockUserData: User = {
+        id: mockUserId,
+        email: 'user@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        image: '',
+        role_id: 1,
+        phone_number: '1234567890',
+        password: 'newPassword123',
+        otp_code: '',
+        otp_expiration: new Date(),
+        is_verified: false,
+        created_at: undefined,
+        updated_at: undefined,
+    };
+
+    const mockHashedPassword = 'newHashedPassword';
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should update the user password successfully', async () => {
+        (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
+        (hash as jest.Mock).mockResolvedValue(mockHashedPassword);
+        (userRepo.update as jest.Mock).mockResolvedValue({
+            ...mockUser,
+            password: mockHashedPassword,
+        });
+
+        const result = await userService.updatePassword(
+            mockAccessToken,
+            mockUserData,
+        );
+
+        expect(verifyJWT).toHaveBeenCalledWith(
+            mockAccessToken,
+            JWT_ACCESS_TOKEN_SECRET,
+        );
+        expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
+        expect(hash).toHaveBeenCalledWith(mockUserData.password, 10);
+        expect(userRepo.update).toHaveBeenCalledWith(mockUserId, {
+            ...mockUser,
+            password: mockHashedPassword,
+        });
+        expect(result).toEqual({
+            ...mockUser,
+            password: mockHashedPassword,
+        });
+    });
+
+    it('should throw an error if token is invalid', async () => {
+        (verifyJWT as jest.Mock).mockRejectedValue(new Error('Invalid token'));
+
+        await expect(
+            userService.updatePassword(mockAccessToken, mockUserData),
+        ).rejects.toThrow('Invalid token');
+
+        expect(verifyJWT).toHaveBeenCalledWith(
+            mockAccessToken,
+            JWT_ACCESS_TOKEN_SECRET,
+        );
+        expect(userRepo.getUserById).not.toHaveBeenCalled();
+        expect(hash).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if user is not found', async () => {
+        (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
+        (userRepo.getUserById as jest.Mock).mockResolvedValue(null);
+
+        await expect(
+            userService.updatePassword(mockAccessToken, mockUserData),
+        ).rejects.toThrow('User not found');
+
+        expect(userRepo.getUserById).toHaveBeenCalledWith(mockUserId);
+        expect(hash).not.toHaveBeenCalled();
+    });
+
+    it('should throw a validation error if password is invalid', async () => {
+        (validateUpdatePassword as jest.Mock).mockReturnValue({
+            error: { details: [{ message: 'Password is required' }] },
+        });
+
+        await expect(
+            userService.updatePassword(mockAccessToken, {} as any),
+        ).rejects.toThrow('Password is required');
+
+        expect(validateUpdatePassword).toHaveBeenCalledWith({});
+        expect(verifyJWT).not.toHaveBeenCalled();
+        expect(userRepo.getUserById).not.toHaveBeenCalled();
+        expect(hash).not.toHaveBeenCalled();
     });
 });
 
 describe('getUserProfileService', () => {
     const mockAccessToken = 'mockAccessToken';
     const mockUserId = 'user123';
-    const mockUser = { id: mockUserId, email: 'user@example.com', username: 'user' };
+    const mockUser = {
+        id: mockUserId,
+        email: 'user@example.com',
+        username: 'user',
+    };
 
     it('should return user profile when accessToken is valid', async () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
@@ -211,7 +360,10 @@ describe('getUserProfileService', () => {
 
         const result = await userService.getUserProfile(mockAccessToken);
 
-        expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, JWT_ACCESS_TOKEN_SECRET);
+        expect(verifyJWT).toHaveBeenCalledWith(
+            mockAccessToken,
+            JWT_ACCESS_TOKEN_SECRET,
+        );
         expect(authRepo.getUserById).toHaveBeenCalledWith(mockUserId);
         expect(result).toEqual(mockUser);
     });
@@ -220,21 +372,28 @@ describe('getUserProfileService', () => {
         (verifyJWT as jest.Mock).mockResolvedValue({ userId: mockUserId });
         (authRepo.getUserById as jest.Mock).mockResolvedValue(null);
 
-        await expect(userService.getUserProfile(mockAccessToken)).rejects.toThrow(
-            new CustomError('User not found', 404),
-        );
+        await expect(
+            userService.getUserProfile(mockAccessToken),
+        ).rejects.toThrow(new CustomError('User not found', 404));
 
-        expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, expect.any(String));
+        expect(verifyJWT).toHaveBeenCalledWith(
+            mockAccessToken,
+            expect.any(String),
+        );
         expect(authRepo.getUserById).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should throw an error if token verification fails', async () => {
         (verifyJWT as jest.Mock).mockRejectedValue(new Error('Invalid token'));
-    
-        await expect(userService.getUserProfile(mockAccessToken)).rejects.toThrow('Invalid token');
-    
-        expect(verifyJWT).toHaveBeenCalledWith(mockAccessToken, expect.any(String));
+
+        await expect(
+            userService.getUserProfile(mockAccessToken),
+        ).rejects.toThrow('Invalid token');
+
+        expect(verifyJWT).toHaveBeenCalledWith(
+            mockAccessToken,
+            expect.any(String),
+        );
         expect(authRepo.getUserById).not.toHaveBeenCalled();
     });
-    
 });
