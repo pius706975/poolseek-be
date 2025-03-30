@@ -175,9 +175,9 @@ const authService = {
             : null;
 
         const isExpired =
-            refreshTokenExpDate && refreshTokenExpDate < new Date();
+            refreshTokenExpDate && refreshTokenExpDate < new Date()
 
-        if (isExpired) throw new CustomError('Refresh token has expired', 401);
+        if (isExpired) throw new CustomError('Refresh token has expired', 401)
 
         const payload = {
             userId: user.id,
