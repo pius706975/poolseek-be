@@ -150,9 +150,9 @@ const authService = {
         const hashedPassword = await hash(userData.password, 10);
         const updatedPassword = await authRepo.resetPassword(user.email, {
             password: hashedPassword,
-        })
+        });
 
-        return updatedPassword
+        return updatedPassword;
     },
 
     refreshToken: async (
@@ -175,9 +175,9 @@ const authService = {
             : null;
 
         const isExpired =
-            refreshTokenExpDate && refreshTokenExpDate < new Date()
+            refreshTokenExpDate && refreshTokenExpDate < new Date();
 
-        if (isExpired) throw new CustomError('Refresh token has expired', 401)
+        if (isExpired) throw new CustomError('Refresh token has expired', 401);
 
         const payload = {
             userId: user.id,
@@ -189,7 +189,7 @@ const authService = {
             '15m',
         );
 
-        return { access_token: newAccessToken }
+        return { access_token: newAccessToken };
     },
 };
 
