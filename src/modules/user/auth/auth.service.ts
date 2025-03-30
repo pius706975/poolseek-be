@@ -150,9 +150,9 @@ const authService = {
         const hashedPassword = await hash(userData.password, 10);
         const updatedPassword = await authRepo.resetPassword(user.email, {
             password: hashedPassword,
-        });
+        })
 
-        return updatedPassword;
+        return updatedPassword
     },
 
     refreshToken: async (
@@ -189,7 +189,7 @@ const authService = {
             '15m',
         );
 
-        return { access_token: newAccessToken };
+        return { access_token: newAccessToken }
     },
 };
 
