@@ -1,0 +1,78 @@
+# [POST] create
+/role/create:
+    post:
+        tags:
+            - Role
+        summary: Create Role
+        requestBody:
+            description: Create Role
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/role'
+        responses:
+            201:
+                description: 'OK'
+            400:
+                description: 'Bad Request'
+            409:
+                description: 'Conflict'
+            500:
+                description: 'Internal server error'
+
+# [GET] list
+/role/:
+    get:
+        tags:
+            - Role
+        summary: List Role
+        responses:
+            200:
+                description: 'OK'
+            400:
+                description: 'Bad Request'
+            500:
+                description: 'Internal server error'
+
+# [GET] detail
+/role/{id}:
+    get:
+        tags:
+            - Role
+        summary: Get Role
+        parameters:
+            - in: path
+              name: id
+              required: true
+              description: The ID of the role to retrieve
+              schema:
+                type: string 
+        responses:
+            200:
+                description: 'OK'
+            400:
+                description: 'Bad Request'
+            500:
+                description: 'Internal server error'
+
+# [DELETE] delete
+/role/delete/{id}:
+    delete:
+        tags:
+            - Role
+        summary: Delete Role
+        parameters:
+            - in: path
+              name: id
+              required: true
+              description: The ID of the role to delete
+              schema:
+                type: string 
+        responses:
+            200:
+                description: 'OK'
+            400:
+                description: 'Bad Request'
+            500:
+                description: 'Internal server error'

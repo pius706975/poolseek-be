@@ -8,7 +8,7 @@ const options = {
         info: {
             title: 'My API',
             version: '1.0.0',
-            description: 'API documentation for my application',
+            description: 'API documentation for SAMAPOS',
         },
         servers: [
             {

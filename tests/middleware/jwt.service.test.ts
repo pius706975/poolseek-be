@@ -9,6 +9,7 @@ jest.mock('jsonwebtoken', () => ({
 describe('JWT Service', () => {
     const secretKey = 'test_secret';
     const payload = { userId: '123' };
+    const expiresIn = '15m';
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -17,9 +18,11 @@ describe('JWT Service', () => {
     test('generateJWT should return a valid token', async () => {
         (jwt.sign as jest.Mock).mockReturnValue('mockedToken');
 
-        const token = await generateJWT(payload, secretKey);
+        const token = await generateJWT(payload, secretKey, expiresIn);
 
-        expect(jwt.sign).toHaveBeenCalledWith(payload, secretKey);
+        expect(jwt.sign).toHaveBeenCalledWith(payload, secretKey, {
+            expiresIn,
+        });
         expect(token).toBe('Bearer mockedToken');
     });
 
@@ -37,16 +40,16 @@ describe('JWT Service', () => {
             throw new Error('Invalid token');
         });
 
-        await expect(verifyJWT('Bearer invalidToken', secretKey)).rejects.toThrow(
-            'Invalid token'
-        );
+        await expect(
+            verifyJWT('Bearer invalidToken', secretKey),
+        ).rejects.toThrow('Invalid token');
     });
 
     test('verifyJWT should throw an error if payload is a string', async () => {
         (jwt.verify as jest.Mock).mockReturnValue('InvalidPayload');
 
         await expect(verifyJWT('Bearer validToken', secretKey)).rejects.toThrow(
-            'Invalid token payload'
+            'Invalid token payload',
         );
     });
 });

@@ -8,21 +8,34 @@ const options = {
     },
 };
 
-export const validateSignUp = (userData: any) => {
+export const validateSendOTP = (email: string) => {
+    const emailData = { email };
     const schema = Joi.object({
-        id: Joi.string()
-            .guid({ version: 'uuidv4' })
-            .optional()
-            .messages({ 'string.guid': 'User ID must be in UUID format' }),
         email: Joi.string().email().required().messages({
             'string.email': 'Email format is invalid',
             'any.required': 'Email is required',
         }),
-        name: Joi.string().min(1).required().messages({
-            'string.min': 'Name should at least minimum 1 character',
-            'any.required': 'Name is required',
+    });
+
+    return schema.validate(emailData, options);
+};
+
+export const validateVerifyOTP = (userData: any) => {
+    const schema = Joi.object({
+        email: Joi.string().email().required().messages({
+            'string.email': 'Email format is invalid',
+            'any.required': 'Email is required',
         }),
-        username: Joi.string().optional(),
+        otp_code: Joi.string().required().messages({
+            'any.required': 'OTP code is required',
+        }),
+    });
+
+    return schema.validate(userData, options);
+};
+
+export const validateUpdatePassword = (userData: any) => {
+    const schema = Joi.object({
         password: Joi.string()
             .min(8)
             .pattern(
@@ -37,18 +50,6 @@ export const validateSignUp = (userData: any) => {
                     'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
                 'any.required': 'Password is required.',
             }),
-    });
-
-    return schema.validate(userData, options);
-};
-
-export const validateSignIn = (userData: any) => {
-    const schema = Joi.object({
-        email: Joi.string().email().required().messages({
-            'string.email': 'Email format is invalid',
-            'any.required': 'Email is required',
-        }),
-        password: Joi.string().required(),
     });
 
     return schema.validate(userData, options);

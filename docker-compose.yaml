@@ -3,21 +3,21 @@ version: "3.8"
 services:
   postgres:
     image: postgres:17.0-alpine3.19
-    container_name: samapos-postgres
+    container_name: stackseek-postgres
     restart: always
     environment:
-      POSTGRES_DB: samapos
-      POSTGRES_USER: pius
-      POSTGRES_PASSWORD: piuspius
+      POSTGRES_DB: stackseek
+      POSTGRES_USER: seeky
+      POSTGRES_PASSWORD: seeky123
     ports:
       - "5432:5432"
     volumes:
-      - samapos_data:/var/lib/postgresql/data
+      - stackseek_data:/var/lib/postgresql/data
     networks:
       - backend_network
 
 volumes:
-  samapos_data:
+  stackseek_data:
     driver: local
 
 networks:
