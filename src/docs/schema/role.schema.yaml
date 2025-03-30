@@ -7,4 +7,4 @@ components:
             properties:
                 role_name:
                     type: string
-                    example: samapos-admin
+                    example: admin

@@ -1,9 +1,17 @@
 export interface User {
     id?: string;
+    firebase_id?: string;
+    google_id?: string;
     email: string;
-    name: string;
-    username: string;
+    first_name: string;
+    last_name: string;
+    image: string;
+    role_id: number;
+    phone_number: string;
     password: string;
+    otp_code: string;
+    otp_expiration: Date;
+    is_verified: boolean;
     created_at: string | undefined;
     updated_at: string | undefined;
 }

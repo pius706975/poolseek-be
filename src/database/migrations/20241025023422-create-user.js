@@ -9,6 +9,14 @@ module.exports = {
                 defaultValue: Sequelize.literal('uuid_generate_v4()'),
                 primaryKey: true,
             },
+            firebase_id: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            google_id: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
             email: {
                 type: Sequelize.STRING(45),
                 allowNull: false,

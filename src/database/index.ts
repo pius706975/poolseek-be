@@ -11,6 +11,7 @@ import {
     NODE_ENV,
 } from '@/config';
 import roleModel from './models/role.model';
+import refreshTokenModel from './models/refresh.token.model';
 
 const sequelize = new Sequelize.Sequelize(
     DB_NAME as string,
@@ -44,6 +45,7 @@ sequelize.authenticate();
 export const DB = {
     Role: roleModel(sequelize),
     Users: userModel(sequelize),
+    RefreshTokens: refreshTokenModel(sequelize),
     sequelize, // connection instance (RAW queries)
     Sequelize, // library
 };
